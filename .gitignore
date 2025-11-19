@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+.venv
+venv
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# Reports
+reports/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+
+.kiro
