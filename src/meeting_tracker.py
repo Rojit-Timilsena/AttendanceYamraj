@@ -21,7 +21,7 @@ class MeetingTracker:
         self.end_timer: Optional[asyncio.Task] = None
         self.active_members: Dict[str, datetime] = {}  # member_id -> join_time
         
-    def handle_member_join(self, member_id: str, member_name: str, member_tag: str) -> None:
+    def handle_member_join(self, member_id: str, member_name: str, member_tag: str, member_nickname: str = None) -> None:
         """
         Record a member joining the voice channel.
         
@@ -29,6 +29,7 @@ class MeetingTracker:
             member_id: Discord user ID
             member_name: Discord username
             member_tag: Discord username#discriminator
+            member_nickname: Server nickname (display name)
         """
         join_time = datetime.now()
         
@@ -43,12 +44,17 @@ class MeetingTracker:
             self.cancel_end_timer()
             logger.info('Meeting end timer cancelled - member joined')
         
-        # Track active member
-        self.active_members[member_id] = join_time
+        # Track active member with nickname
+        self.active_members[member_id] = {
+            'join_time': join_time,
+            'member_name': member_name,
+            'member_tag': member_tag,
+            'member_nickname': member_nickname or member_name
+        }
         
         logger.info(f'Member joined: {member_name} ({member_id}) at {join_time.strftime("%Y-%m-%d %H:%M:%S")}')
 
-    def handle_member_leave(self, member_id: str, member_name: str, member_tag: str) -> None:
+    def handle_member_leave(self, member_id: str, member_name: str, member_tag: str, member_nickname: str = None) -> None:
         """
         Record a member leaving the voice channel and calculate session duration.
         
@@ -56,15 +62,18 @@ class MeetingTracker:
             member_id: Discord user ID
             member_name: Discord username
             member_tag: Discord username#discriminator
+            member_nickname: Server nickname (display name)
         """
         leave_time = datetime.now()
         
-        # Get join time for this member
-        join_time = self.active_members.get(member_id)
+        # Get member data for this member
+        member_data = self.active_members.get(member_id)
         
-        if join_time is None:
+        if member_data is None:
             logger.warning(f'Member leave event without join: {member_name} ({member_id})')
             return
+        
+        join_time = member_data['join_time']
         
         # Calculate session duration in seconds
         duration = (leave_time - join_time).total_seconds()
@@ -72,8 +81,9 @@ class MeetingTracker:
         # Create session record
         session = {
             'member_id': member_id,
-            'member_name': member_name,
-            'member_tag': member_tag,
+            'member_name': member_data['member_name'],
+            'member_tag': member_data['member_tag'],
+            'member_nickname': member_data['member_nickname'],
             'join_time': join_time,
             'leave_time': leave_time,
             'duration': duration
@@ -193,6 +203,7 @@ class MeetingTracker:
                     'member_id': member_id,
                     'member_name': session['member_name'],
                     'member_tag': session['member_tag'],
+                    'member_nickname': session.get('member_nickname', session['member_name']),
                     'total_time': 0.0,
                     'session_count': 0
                 }

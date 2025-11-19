@@ -53,7 +53,8 @@ class VoiceStateHandler:
                 self.meeting_tracker.handle_member_join(
                     member_id=str(member.id),
                     member_name=member.name,
-                    member_tag=f'{member.name}#{member.discriminator}'
+                    member_tag=f'{member.name}#{member.discriminator}',
+                    member_nickname=member.display_name
                 )
             
             # Check if this is a leave event
@@ -62,7 +63,8 @@ class VoiceStateHandler:
                 self.meeting_tracker.handle_member_leave(
                     member_id=str(member.id),
                     member_name=member.name,
-                    member_tag=f'{member.name}#{member.discriminator}'
+                    member_tag=f'{member.name}#{member.discriminator}',
+                    member_nickname=member.display_name
                 )
                 
                 # The meeting tracker will handle starting the end timer

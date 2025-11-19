@@ -24,7 +24,7 @@ from src.config import (
 
 def format_email_body(meeting_data: Dict) -> str:
     """
-    Format meeting data into an HTML email body.
+    Format meeting data into an attractive HTML email body.
     
     Args:
         meeting_data: Dictionary containing meeting report data
@@ -39,96 +39,221 @@ def format_email_body(meeting_data: Dict) -> str:
     member_summaries = meeting_data.get('member_summaries', [])
     
     # Format timestamps
-    start_str = meeting_start.strftime('%Y-%m-%d %H:%M:%S') if meeting_start else 'N/A'
-    end_str = meeting_end.strftime('%Y-%m-%d %H:%M:%S') if meeting_end else 'N/A'
+    start_date = meeting_start.strftime('%B %d, %Y') if meeting_start else 'N/A'
+    start_time = meeting_start.strftime('%I:%M %p') if meeting_start else 'N/A'
+    end_time = meeting_end.strftime('%I:%M %p') if meeting_end else 'N/A'
     
     # Format total duration
     hours = int(total_duration // 3600)
     minutes = int((total_duration % 3600) // 60)
     seconds = int(total_duration % 60)
-    duration_str = f'{hours}h {minutes}m {seconds}s' if hours > 0 else f'{minutes}m {seconds}s'
+    duration_str = f'{hours}h {minutes}m' if hours > 0 else f'{minutes}m {seconds}s'
     
-    # Build HTML email
-    html = f"""
-    <html>
-    <head>
-        <style>
-            body {{
-                font-family: Arial, sans-serif;
-                line-height: 1.6;
-                color: #333;
-            }}
-            .header {{
-                background-color: #5865F2;
-                color: white;
-                padding: 20px;
-                border-radius: 5px;
-            }}
-            .summary {{
-                background-color: #f4f4f4;
-                padding: 15px;
-                margin: 20px 0;
-                border-radius: 5px;
-            }}
-            table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin: 20px 0;
-            }}
-            th {{
-                background-color: #5865F2;
-                color: white;
-                padding: 12px;
-                text-align: left;
-            }}
-            td {{
-                padding: 10px;
-                border-bottom: 1px solid #ddd;
-            }}
-            tr:hover {{
-                background-color: #f5f5f5;
-            }}
-            .footer {{
-                margin-top: 30px;
-                padding-top: 20px;
-                border-top: 1px solid #ddd;
-                color: #666;
-                font-size: 12px;
-            }}
-        </style>
-    </head>
-    <body>
+    # Build attractive HTML email
+    html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f7fa;
+            padding: 20px;
+            line-height: 1.6;
+        }}
+        .container {{
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }}
+        .header {{
+            background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }}
+        .header h1 {{
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }}
+        .header p {{
+            font-size: 16px;
+            opacity: 0.9;
+        }}
+        .summary-cards {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 30px;
+            background: #f8f9fb;
+        }}
+        .card {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e3e5e8;
+        }}
+        .card-value {{
+            font-size: 24px;
+            font-weight: 700;
+            color: #5865F2;
+            margin-bottom: 5px;
+        }}
+        .card-label {{
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        .content {{
+            padding: 30px;
+        }}
+        .section-title {{
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #5865F2;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }}
+        thead {{
+            background: #5865F2;
+            color: white;
+        }}
+        th {{
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+        td {{
+            padding: 15px;
+            border-bottom: 1px solid #e3e5e8;
+            color: #495057;
+        }}
+        tbody tr:last-child td {{
+            border-bottom: none;
+        }}
+        tbody tr:hover {{
+            background-color: #f8f9fb;
+        }}
+        .member-info {{
+            display: flex;
+            flex-direction: column;
+        }}
+        .member-nickname {{
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 15px;
+        }}
+        .member-username {{
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 2px;
+        }}
+        .duration-badge {{
+            display: inline-block;
+            padding: 6px 12px;
+            background: #e7f3ff;
+            color: #0066cc;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+        }}
+        .session-count {{
+            display: inline-block;
+            padding: 6px 12px;
+            background: #f0f0f0;
+            color: #495057;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+        }}
+        .footer {{
+            background: #f8f9fb;
+            padding: 20px 30px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 13px;
+            border-top: 1px solid #e3e5e8;
+        }}
+        .footer p {{
+            margin: 5px 0;
+        }}
+        .emoji {{
+            font-size: 20px;
+            margin-right: 8px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
         <div class="header">
-            <h1>Discord Voice Channel Meeting Report</h1>
+            <h1>🎙️ Voice Meeting Report</h1>
+            <p>{start_date}</p>
         </div>
         
-        <div class="summary">
-            <h2>Meeting Summary</h2>
-            <p><strong>Start Time:</strong> {start_str}</p>
-            <p><strong>End Time:</strong> {end_str}</p>
-            <p><strong>Total Duration:</strong> {duration_str}</p>
-            <p><strong>Total Participants:</strong> {len(member_summaries)}</p>
-            <p><strong>Total Sessions:</strong> {len(sessions)}</p>
+        <div class="summary-cards">
+            <div class="card">
+                <div class="card-value">{start_time}</div>
+                <div class="card-label">Start Time</div>
+            </div>
+            <div class="card">
+                <div class="card-value">{end_time}</div>
+                <div class="card-label">End Time</div>
+            </div>
+            <div class="card">
+                <div class="card-value">{duration_str}</div>
+                <div class="card-label">Duration</div>
+            </div>
+            <div class="card">
+                <div class="card-value">{len(member_summaries)}</div>
+                <div class="card-label">Participants</div>
+            </div>
         </div>
+        
+        <div class="content">
 """
     
     # Add member summaries table
     if member_summaries:
         html += """
-        <h2>Participant Summary</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Member</th>
-                    <th>Total Time</th>
-                    <th>Sessions</th>
-                </tr>
-            </thead>
-            <tbody>
+            <h2 class="section-title">👥 Participant Summary</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Total Time</th>
+                        <th>Sessions</th>
+                    </tr>
+                </thead>
+                <tbody>
 """
         
         for member in member_summaries:
-            member_name = member.get('member_name', 'Unknown')
+            member_nickname = member.get('member_nickname', member.get('member_name', 'Unknown'))
+            member_username = member.get('member_tag', member.get('member_name', 'Unknown'))
             total_time = member.get('total_time', 0)
             session_count = member.get('session_count', 0)
             
@@ -136,45 +261,51 @@ def format_email_body(meeting_data: Dict) -> str:
             m_hours = int(total_time // 3600)
             m_minutes = int((total_time % 3600) // 60)
             m_seconds = int(total_time % 60)
-            time_str = f'{m_hours}h {m_minutes}m {m_seconds}s' if m_hours > 0 else f'{m_minutes}m {m_seconds}s'
+            time_str = f'{m_hours}h {m_minutes}m' if m_hours > 0 else f'{m_minutes}m {m_seconds}s'
             
             html += f"""
-                <tr>
-                    <td>{member_name}</td>
-                    <td>{time_str}</td>
-                    <td>{session_count}</td>
-                </tr>
+                    <tr>
+                        <td>
+                            <div class="member-info">
+                                <span class="member-nickname">{member_nickname}</span>
+                                <span class="member-username">{member_username}</span>
+                            </div>
+                        </td>
+                        <td><span class="duration-badge">{time_str}</span></td>
+                        <td><span class="session-count">{session_count}</span></td>
+                    </tr>
 """
         
         html += """
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 """
     
     # Add detailed sessions table
     if sessions:
         html += """
-        <h2>Detailed Session Log</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Member</th>
-                    <th>Join Time</th>
-                    <th>Leave Time</th>
-                    <th>Duration</th>
-                </tr>
-            </thead>
-            <tbody>
+            <h2 class="section-title">📋 Detailed Session Log</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Join Time</th>
+                        <th>Leave Time</th>
+                        <th>Duration</th>
+                    </tr>
+                </thead>
+                <tbody>
 """
         
         for session in sessions:
-            member_name = session.get('member_name', 'Unknown')
+            member_nickname = session.get('member_nickname', session.get('member_name', 'Unknown'))
+            member_username = session.get('member_tag', session.get('member_name', 'Unknown'))
             join_time = session.get('join_time')
             leave_time = session.get('leave_time')
             duration = session.get('duration', 0)
             
-            join_str = join_time.strftime('%H:%M:%S') if join_time else 'N/A'
-            leave_str = leave_time.strftime('%H:%M:%S') if leave_time else 'N/A'
+            join_str = join_time.strftime('%I:%M:%S %p') if join_time else 'N/A'
+            leave_str = leave_time.strftime('%I:%M:%S %p') if leave_time else 'N/A'
             
             # Format session duration
             s_minutes = int(duration // 60)
@@ -182,25 +313,34 @@ def format_email_body(meeting_data: Dict) -> str:
             duration_str = f'{s_minutes}m {s_seconds}s'
             
             html += f"""
-                <tr>
-                    <td>{member_name}</td>
-                    <td>{join_str}</td>
-                    <td>{leave_str}</td>
-                    <td>{duration_str}</td>
-                </tr>
+                    <tr>
+                        <td>
+                            <div class="member-info">
+                                <span class="member-nickname">{member_nickname}</span>
+                                <span class="member-username">{member_username}</span>
+                            </div>
+                        </td>
+                        <td>{join_str}</td>
+                        <td>{leave_str}</td>
+                        <td><span class="duration-badge">{duration_str}</span></td>
+                    </tr>
 """
         
         html += """
-            </tbody>
-        </table>
+                </tbody>
+            </table>
 """
     
     html += """
-        <div class="footer">
-            <p>This report was automatically generated by Discord Voice Tracker Bot.</p>
         </div>
-    </body>
-    </html>
+        
+        <div class="footer">
+            <p>🤖 Automatically generated by Discord Voice Tracker Bot</p>
+            <p>Tracking voice channel activity with precision</p>
+        </div>
+    </div>
+</body>
+</html>
 """
     
     return html
