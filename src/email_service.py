@@ -365,6 +365,7 @@ async def send_meeting_report(meeting_data: Dict) -> bool:
     message = MIMEMultipart('alternative')
     message['Subject'] = f'Meeting Report - {meeting_data.get("meeting_start_time", datetime.now()).strftime("%Y-%m-%d %H:%M")}'
     message['From'] = EMAIL_FROM
+    # Support multiple recipients (comma-separated)
     message['To'] = EMAIL_TO
     
     # Attach HTML body
@@ -400,7 +401,9 @@ async def send_email_with_retry(message: MIMEMultipart, max_retries: int = 3) ->
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
                 server.starttls()  # Enable TLS encryption
                 server.login(SMTP_USER, SMTP_PASS)
-                server.send_message(message)
+                # Parse comma-separated email addresses
+                recipients = [email.strip() for email in EMAIL_TO.split(',')]
+                server.sendmail(EMAIL_FROM, recipients, message.as_string())
             
             logger.info('Email sent successfully')
             return True
@@ -440,7 +443,7 @@ async def save_report_to_file(meeting_data: Dict) -> None:
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     filename = os.path.join(reports_dir, f'meeting-{timestamp}.json')
     
-    # Convert datetime objects to strings for JSON serialization
+    # Convert datetime objects to strings for JSON serializationcan
     serializable_data = _make_serializable(meeting_data)
     
     try:
